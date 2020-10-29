@@ -53,50 +53,65 @@ public class CreateAccount extends HttpServlet {
         // get the session from Servlet
         HttpSession session = request.getSession();
 
-
         try{
             // create database connection and statement
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
 
+            /*PreparedStatement dlt = conn.prepareStatement("TRUNCATE TABLE userAccounts");
+            dlt.execute();*/
 
-            // Create sql query
-            String query = "INSERT INTO userAccounts (Firstname, Lastname, Email, Phone, Username, Pwd, Salt)"
+            //check for the same usernames
+            PreparedStatement checkusers = conn.prepareStatement("SELECT Username FROM userAccounts WHERE Username = ?");
+            checkusers.setString(1, username);
+            ResultSet rschecked = checkusers.executeQuery();
+
+            if (!(rschecked.next())) { //if this user is not yet in the database, allow to create an account
+
+                // Create sql query
+                String query = "INSERT INTO userAccounts (Firstname, Lastname, Email, Phone, Username, Pwd, Salt)"
                         + " VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            byte[] salt = getSalt(); //get salt
-            System.out.println("nowe salt: " + Arrays.toString(salt));
-            String hashedpwd = hash_pwd(password, salt); //get a hashed password
+                byte[] salt = getSalt(); //get salt
+                System.out.println("nowe salt: " + Arrays.toString(salt));
+                String hashedpwd = hash_pwd(password, salt); //get a hashed password
 
-            // set values into SQL query statement
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1,firstname);
-            stmt.setString(2,lastname);
-            stmt.setString(3,email);
-            stmt.setString(4,phone);
-            stmt.setString(5,username);
-            stmt.setString(6,hashedpwd);
-            stmt.setBytes(7, salt);
+                // set values into SQL query statement
+                stmt = conn.prepareStatement(query);
+                stmt.setString(1, firstname);
+                stmt.setString(2, lastname);
+                stmt.setString(3, email);
+                stmt.setString(4, phone);
+                stmt.setString(5, username);
+                stmt.setString(6, hashedpwd);
+                stmt.setBytes(7, salt);
 
 
-            // execute query and close connection
-            stmt.execute();
-            conn.close();
+                // execute query and close connection
+                stmt.execute();
+                conn.close();
 
-            // set the user data as attributes of the session
-            session.setAttribute("first name", firstname);
-            System.out.println(firstname);
-            session.setAttribute("last name", lastname);
-            session.setAttribute("username", username);
-            session.setAttribute("email", email);
-            session.setAttribute("phone number", phone);
-            session.setAttribute("hashed password", hashedpwd);
-            session.setAttribute("salt", salt);
+                // set the user data as attributes of the session
+                session.setAttribute("first name", firstname);
+                System.out.println(firstname);
+                session.setAttribute("last name", lastname);
+                session.setAttribute("username", username);
+                session.setAttribute("email", email);
+                session.setAttribute("phone number", phone);
+                session.setAttribute("hashed password", hashedpwd);
+                session.setAttribute("salt", salt);
 
-            // display account.jsp page with given message if successful
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-            request.setAttribute("message", firstname+", you have successfully created an account");
-            dispatcher.forward(request, response);
+                // display account.jsp page with given message if successful
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
+                request.setAttribute("message", firstname + ", you have successfully created an account");
+                dispatcher.forward(request, response);
+            }
+            else{
+                // display error.jsp page with given message if unsuccessful
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
+                request.setAttribute("message", firstname+", this username already exists. Please try again");
+                dispatcher.forward(request, response);
+            }
 
 
             // TODO check his error handling and improve yours

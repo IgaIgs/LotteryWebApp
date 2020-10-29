@@ -25,7 +25,7 @@ public class UserLogin extends HttpServlet {
 
         String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
         String USER = "user";
-        String PASS = "password";
+        String PASS = "passcode";
 
         // URLs to connect to database depending on your development approach
         // (NOTE: please change to option 1 when submitting)
