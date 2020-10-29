@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
+import java.io.*;
 import java.security.*;
 import java.util.Arrays;
 
@@ -23,11 +23,9 @@ public class AddUserNumbers extends HttpServlet {
 
             //get the hashed password
             String pwd = (String) session.getAttribute("hashed password");
-            System.out.println(pwd);
 
             //create a single String from the number submitted by the user
             String usernumber = request.getParameter("usernumber");
-
 
             // create the KeyPair for encryption
             KeyPair pair;
@@ -52,8 +50,10 @@ public class AddUserNumbers extends HttpServlet {
 
             //write the String to file
             //create file name from first 20 characters of the hashed password
-            String filename = pwd.substring(0, 19);
+            String filename = pwd.substring(0, 20);
             System.out.println(filename);
+            writeToFile(filename, enString);
+            System.out.println("plik poszedl");
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
             request.setAttribute("message", "File name: " + filename);
@@ -100,5 +100,18 @@ public class AddUserNumbers extends HttpServlet {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void writeToFile(String filename, String encrypted){
+        try{
+            // add true if append, not overwrite
+            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename);
+            plswrite.write(encrypted);
+            plswrite.flush();
+            plswrite.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }
