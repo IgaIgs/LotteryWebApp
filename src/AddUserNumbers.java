@@ -46,7 +46,7 @@ public class AddUserNumbers extends HttpServlet {
 
             // get the encrypted string
             String enString = encryptData(usernumber, pair);
-            System.out.println(enString);
+            System.out.println("ecnr: " + enString);
 
             //write the String to file
             //create file name from first 20 characters of the hashed password
@@ -92,12 +92,8 @@ public class AddUserNumbers extends HttpServlet {
             return Arrays.toString(cipher.doFinal());
 
         }
-        catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException ex){
+        catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException ex){
             ex.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
         }
         return null;
     }
