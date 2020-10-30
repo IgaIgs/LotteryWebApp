@@ -10,8 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.util.Arrays;
 
 @WebServlet("/AddUserNumbers")
 public class AddUserNumbers extends HttpServlet {
@@ -46,24 +46,21 @@ public class AddUserNumbers extends HttpServlet {
 
             // get the encrypted string
             String enString = encryptData(usernumber, pair);
-            System.out.println("ecnr: " + enString);
 
-            //write the String to file
             //create file name from first 20 characters of the hashed password
-            String filename = pwd.substring(0, 20);
-            System.out.println(filename);
+            String filename = pwd.substring(0, 20) + ".txt";
+            //write the String to file
             writeToFile(filename, enString);
-            System.out.println("plik poszedl");
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-            request.setAttribute("message", "File name: " + filename);
+            request.setAttribute("message", "Press the 'Get Draws' button to display you draws!");
             dispatcher.forward(request, response);
         }
         catch(Exception se){
             se.printStackTrace();
             // display error.jsp page with given message if unsuccessful
             RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
-            request.setAttribute("message", "no i znowu sie zjebalo");
+            request.setAttribute("message", "Something went wrong");
             dispatcher.forward(request, response);
         }
 
@@ -88,8 +85,9 @@ public class AddUserNumbers extends HttpServlet {
             //convert the input String to a byte[] to be able to pass it to cipher
             cipher.update(usernumber.getBytes());
 
-            //finally: encrypt the String using cipher
-            return Arrays.toString(cipher.doFinal());
+            //encrypt and convert bytes to hex string
+            return bytesToHex(cipher.doFinal());
+
 
         }
         catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException ex){
@@ -101,7 +99,7 @@ public class AddUserNumbers extends HttpServlet {
     public void writeToFile(String filename, String encrypted){
         try{
             // add true if append, not overwrite
-            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename);
+            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8);
             plswrite.write(encrypted);
             plswrite.flush();
             plswrite.close();
@@ -109,5 +107,16 @@ public class AddUserNumbers extends HttpServlet {
         catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 }

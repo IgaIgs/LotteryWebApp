@@ -8,7 +8,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 
 
@@ -43,13 +43,22 @@ public class UserLogin extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        // get the session from Servlet
+        // get the current session from Servlet
         HttpSession session = request.getSession();
 
-        System.out.println("poczatek");
+        //remove all pre-existing session attributes
+        Enumeration<String> attributes =  session.getAttributeNames();
+        while (attributes.hasMoreElements()){
+            session.removeAttribute(attributes.nextElement());
+        }
+        //invalidate the current session
+        session.invalidate();
+
+        // get the session again
+        session = request.getSession();
+
 
         try {
-            System.out.println("wchodze");
             // create database connection and statement
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
@@ -58,22 +67,18 @@ public class UserLogin extends HttpServlet {
             PreparedStatement getsalt = conn.prepareStatement("SELECT Salt FROM userAccounts WHERE Username = ?");
             getsalt.setString(1, username);
             ResultSet salts = getsalt.executeQuery(); //my salts here
-            System.out.println("zebralam salts");
-
 
             //hash the password of the current user (attempting login) with each of the salts from the query above
             //list to store variations of the hashed password
             List<String> hashes = new ArrayList<>();
             // for each salt,
             while(salts.next()){
-                System.out.println("to salts: " + Arrays.toString(salts.getBytes("Salt")));
                 //add it to the hashed password and store the complete hashed password in the hashes array
                 hashes.add(acc.hash_pwd(password, salts.getBytes("Salt")));
             }
             System.out.println("zhashowalam passwordy");
 
             System.out.println(hashes.size());
-            System.out.println(hashes);
 
             // for every variation of the hashed password
             for (String hash : hashes) {
@@ -87,12 +92,6 @@ public class UserLogin extends HttpServlet {
 
                 if (rscheck.next()) { //if this account is already in the database
 
-                    /*stmt = conn.createStatement();
-
-                    // query database and get results
-                    ResultSet rs = stmt.executeQuery("SELECT * FROM userAccounts");*/
-
-                    //while (rscheck.next()) {
                         // set the user data as attributes of the session
                         session.setAttribute("first name", rscheck.getString("Firstname"));
                         System.out.println(rscheck.getString("Firstname"));
@@ -101,7 +100,6 @@ public class UserLogin extends HttpServlet {
                         session.setAttribute("email", rscheck.getString("Email"));
                         session.setAttribute("phone number", rscheck.getString("Phone"));
                         session.setAttribute("hashed password", rscheck.getString("Pwd"));
-                    //}
 
                     // display account.jsp page with given message if successful
                     RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");

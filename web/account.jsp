@@ -14,12 +14,25 @@
 <h1>User Account</h1>
 
 <!--TODO add labels to the information showed such as First name: firstname etc -->
-<p><%= request.getAttribute("message") %></p>
-<p><%= session.getAttribute("first name") %></p>
-<p><%= session.getAttribute("last name") %></p>
-<p><%= session.getAttribute("username") %></p>
-<p><%= session.getAttribute("email") %></p>
-<p><%= session.getAttribute("phone number") %></p>
+
+<h3><%= request.getAttribute("message") %></h3>
+
+<p> ---------------- </p>
+<h3><%= "Your account data: "%></h3>
+<p><%= "First name: " + session.getAttribute("first name") %></p>
+<p><%= "Last name: " + session.getAttribute("last name") %></p>
+<p><%= "Username: " + session.getAttribute("username") %></p>
+<p><%= "Email: " + session.getAttribute("email") %></p>
+<p><%= "Phone number: " + session.getAttribute("phone number") %></p>
+<p></p>
+<p> ---------------- </p>
+<% String[] arr = (String[]) request.getAttribute("draws");
+    if (!(arr == null)){ %>
+        <h3><%="Your draws are:" %></h3>
+       <% for (int i = 0; i < arr.length-1; i++){ %>
+            <p><%= i+1 + ") " + arr[i] %></p>
+      <%  }
+    } %>
 
 <!-- so this form is no longer used or what?
 <form action="UserLogin" method="post">

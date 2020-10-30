@@ -2,6 +2,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,7 +15,6 @@ import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 @WebServlet("/GetUserNumbers")
 public class GetUserNumbers extends HttpServlet {
@@ -24,26 +24,33 @@ public class GetUserNumbers extends HttpServlet {
             // get the session from Servlet
             HttpSession session = request.getSession();
 
-            System.out.println("otwieram sesje");
             //get the hashed password
             String pwd = (String) session.getAttribute("hashed password");
-            System.out.println("mam hashed password");
 
             //get file name to be read from
-            String filename = pwd.substring(0, 20);
-            System.out.println("mam nazwe pliku");
+            String filename = pwd.substring(0, 20) + ".txt";
 
             //get encrypted string
             String encrypted = readFromFile(filename);
-            System.out.println("encrypted string: " + encrypted);
 
             //get the encryption keypair which was saved as an attribute of the session when encrypting
             KeyPair pair = (KeyPair) session.getAttribute("keypair");
-            System.out.println("mam key pair");
 
             //decrypt the string
-            String decrypted = decryptData(filename, pair);
+            String decrypted = decryptData(encrypted, pair);
             System.out.println("decrypted: " + decrypted);
+
+            //add the decrypted String to an Array
+            String[] decryptedStrings = new String[4];
+            decryptedStrings[0]= decrypted;
+            for (int i = 1; i < decryptedStrings.length-1; i++){
+                decryptedStrings[i] = "Whatever";
+            }
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
+            request.setAttribute("draws", decryptedStrings);
+            request.setAttribute("message", "Find your draws below your account info:");
+            dispatcher.forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,25 +70,40 @@ public class GetUserNumbers extends HttpServlet {
         return null;
     }
 
+    /*public String readFile(String filename) throws IOException {
+        Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
+        path = path.resolve(filename + ".txt");
+        FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());
+        String decrypted = new String(plsread.readAllBytes());
+        plsread.close();
+        return decrypted;
+    }*/
+
     //TODO solve decryption error
     public String decryptData(String encrypted, KeyPair pair){
         try {
-            System.out.println("weszlam do decrypt funkcji");
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-
             cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
-            System.out.println("zainicjowalam ciphera");
+
             //convert the encrypted string to a byte array to be able to pass it to the cipher
-            cipher.update(encrypted.getBytes());
-            System.out.println("String do bytearray");
+            cipher.update(hexStringtoByte(encrypted));
 
             byte[] decrbyte = cipher.doFinal(); //decrypt the string
-            System.out.println("String decrypted");
-            return Arrays.toString(decrbyte); //return decrypted string
+            return new String(decrbyte); //return decrypted string
 
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public byte[] hexStringtoByte(String hexs){
+        int len = hexs.length();
+        byte[] b = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            b[i / 2] = (byte) ((Character.digit(hexs.charAt(i), 16) << 4)
+                    + Character.digit(hexs.charAt(i+1), 16));
+        }
+        return b;
     }
 }
