@@ -5,7 +5,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -42,9 +44,25 @@ public class UserLogin extends HttpServlet {
         // get parameters from the log In form
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        String role = request.getParameter("role");
 
         // get the current session from Servlet
         HttpSession session = request.getSession();
+
+        //if this user has already used the website and files were already created for him
+        if ((session.getAttribute("username") != null) && (session.getAttribute("username").equals(username))){
+            //get the hashed password
+            String pwd = (String) session.getAttribute("hashed password");
+
+            //get this users filename
+            String filename = pwd.substring(0, 20) + ".txt";
+
+            // make the file blank so that the next time the user logs in and picks his lottery numbers,
+            // there are no problems with encryption and decryption
+            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8);
+            plswrite.write("");
+            plswrite.close();
+        }
 
         //remove all pre-existing session attributes
         Enumeration<String> attributes =  session.getAttributeNames();
@@ -83,10 +101,11 @@ public class UserLogin extends HttpServlet {
             // for every variation of the hashed password
             for (String hash : hashes) {
 
-                //prepare a check whether this combination of username and hashed password is already in the database
-                PreparedStatement check = conn.prepareStatement("SELECT * FROM userAccounts WHERE Username = ? AND Pwd = ?");
+                //prepare a check whether this combination of username and hashed password and role is already in the database
+                PreparedStatement check = conn.prepareStatement("SELECT * FROM userAccounts WHERE Username = ? AND Pwd = ? AND Userrole = ?");
                 check.setString(1, username);
                 check.setString(2, hash);
+                check.setString(3, role);
                 ResultSet rscheck = check.executeQuery();
                 System.out.println("sprawdzilam czy password jest w bazie");
 
@@ -96,17 +115,27 @@ public class UserLogin extends HttpServlet {
                         session.setAttribute("first name", rscheck.getString("Firstname"));
                         System.out.println(rscheck.getString("Firstname"));
                         session.setAttribute("last name", rscheck.getString("Lastname"));
-                        session.setAttribute("username", username); //from the log in form
                         session.setAttribute("email", rscheck.getString("Email"));
                         session.setAttribute("phone number", rscheck.getString("Phone"));
+                        session.setAttribute("username", rscheck.getString("Username")); //from the log in form
+                        session.setAttribute("role", rscheck.getString("Userrole")); //from the log in form
                         session.setAttribute("hashed password", rscheck.getString("Pwd"));
 
-                    // display account.jsp page with given message if successful
-                    RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-                    request.setAttribute("message", "Login successful!");
-                    dispatcher.forward(request, response);
-
+                    // display account.jsp page with given message if successful and the user is public
+                    RequestDispatcher dispatcher;
+                    if (session.getAttribute("role").equals("public")){
+                        dispatcher = request.getRequestDispatcher("/account.jsp");
+                        request.setAttribute("message", "Login successful!");
+                        dispatcher.forward(request, response);
+                    }
+                    //display the admin page if successful and user is admin
+                    else if (session.getAttribute("role").equals("admin")){
+                        dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
+                        request.setAttribute("message", "Login successful!");
+                        dispatcher.forward(request, response);
+                    }
                     conn.close();
+
                 } else {
                     // display error.jsp page with given message if unsuccessful
                     RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
