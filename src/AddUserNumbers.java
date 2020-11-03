@@ -30,16 +30,23 @@ public class AddUserNumbers extends HttpServlet {
             // create the KeyPair for encryption
             KeyPair pair;
 
-            // get an instance of the KeyPairGenerator
-            KeyPairGenerator keyPairGen = null;
-            try {
-                keyPairGen = KeyPairGenerator.getInstance("RSA");
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+            // if there isn't any keypair already generated in this session:
+            if (session.getAttribute("keypair") == null){
+
+                // get an instance of the KeyPairGenerator
+                KeyPairGenerator keyPairGen = null;
+                try {
+                    keyPairGen = KeyPairGenerator.getInstance("RSA");
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
+                //generate a new keypair and assign it to our pair variable
+                assert keyPairGen != null;
+                pair = keyPairGen.generateKeyPair();
             }
-            //generate a new keypair and assign it to our pair variable
-            assert keyPairGen != null;
-            pair = keyPairGen.generateKeyPair();
+            else{ //if there is already a keypair in use in this session
+                pair = (KeyPair) session.getAttribute("keypair");
+            }
 
             // set the KeyPair as attributes of the session
             session.setAttribute("keypair", pair);
@@ -99,9 +106,8 @@ public class AddUserNumbers extends HttpServlet {
     public void writeToFile(String filename, String encrypted){
         try{
             // add true if append, not overwrite
-            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8);
-            plswrite.write(encrypted);
-            plswrite.flush();
+            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8, true);
+            plswrite.write(encrypted + System.lineSeparator()); //write the encrypted string with a new line after it so it's easier to split them later
             plswrite.close();
         }
         catch (IOException e){

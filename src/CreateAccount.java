@@ -48,6 +48,7 @@ public class CreateAccount extends HttpServlet {
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
         String username = request.getParameter("username");
+        String role = request.getParameter("role");
         String password = request.getParameter("password");
 
         // get the session from Servlet
@@ -66,11 +67,11 @@ public class CreateAccount extends HttpServlet {
             checkusers.setString(1, username);
             ResultSet rschecked = checkusers.executeQuery();
 
-            if (!(rschecked.next())) { //if this user is not yet in the database, allow to create an account
+            if (!(rschecked.next())) { //if this user is NOT yet in the database, allow to create an account
 
                 // Create sql query
-                String query = "INSERT INTO userAccounts (Firstname, Lastname, Email, Phone, Username, Pwd, Salt)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?)";
+                String query = "INSERT INTO userAccounts (Firstname, Lastname, Email, Phone, Username, Userrole, Pwd, Salt)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
                 byte[] salt = getSalt(); //get salt
                 System.out.println("nowe salt: " + Arrays.toString(salt));
@@ -83,8 +84,9 @@ public class CreateAccount extends HttpServlet {
                 stmt.setString(3, email);
                 stmt.setString(4, phone);
                 stmt.setString(5, username);
-                stmt.setString(6, hashedpwd);
-                stmt.setBytes(7, salt);
+                stmt.setString(6, role);
+                stmt.setString(7, hashedpwd);
+                stmt.setBytes(8, salt);
 
 
                 // execute query and close connection
@@ -95,16 +97,27 @@ public class CreateAccount extends HttpServlet {
                 session.setAttribute("first name", firstname);
                 System.out.println(firstname);
                 session.setAttribute("last name", lastname);
-                session.setAttribute("username", username);
                 session.setAttribute("email", email);
                 session.setAttribute("phone number", phone);
+                session.setAttribute("username", username);
+                session.setAttribute("role", role);
+                System.out.println(role);
                 session.setAttribute("hashed password", hashedpwd);
                 session.setAttribute("salt", salt);
 
-                // display account.jsp page with given message if successful
-                RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-                request.setAttribute("message", firstname + ", you have successfully created an account");
-                dispatcher.forward(request, response);
+                // display account.jsp page with given message if successful and the user is public
+                RequestDispatcher dispatcher;
+                if (session.getAttribute("role").equals("public")){
+                    dispatcher = request.getRequestDispatcher("/account.jsp");
+                    request.setAttribute("message", "You have successfully created a public account");
+                    dispatcher.forward(request, response);
+                }
+                else if (session.getAttribute("role").equals("admin")){
+                    dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
+                    request.setAttribute("message", "You have successfully created an admin account");
+                    dispatcher.forward(request, response);
+                }
+
             }
             else{
                 // display error.jsp page with given message if unsuccessful

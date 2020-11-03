@@ -1,7 +1,6 @@
 import javax.servlet.RequestDispatcher;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;

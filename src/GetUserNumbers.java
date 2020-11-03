@@ -9,9 +9,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -30,21 +31,24 @@ public class GetUserNumbers extends HttpServlet {
             //get file name to be read from
             String filename = pwd.substring(0, 20) + ".txt";
 
-            //get encrypted string
-            String encrypted = readFromFile(filename);
+            //get all the encrypted strings from a file
+            String encrypted = readFile(filename);
 
             //get the encryption keypair which was saved as an attribute of the session when encrypting
             KeyPair pair = (KeyPair) session.getAttribute("keypair");
 
-            //decrypt the string
-            String decrypted = decryptData(encrypted, pair);
-            System.out.println("decrypted: " + decrypted);
+            // split the strings from the file back to single encrypted strings with 6 integers each
+            // and store them in an array
+            String[] lines = encrypted.split(System.lineSeparator());
 
-            //add the decrypted String to an Array
-            String[] decryptedStrings = new String[4];
-            decryptedStrings[0]= decrypted;
-            for (int i = 1; i < decryptedStrings.length-1; i++){
-                decryptedStrings[i] = "Whatever";
+            //create an array to store decrypted strings
+            String[] decryptedStrings = new String[lines.length];
+
+            //for each string inside the array
+            for (int i = 0; i < lines.length; i++) {
+                //decrypt the string
+                String decrypted = decryptData(lines[i], pair);
+                decryptedStrings[i] = decrypted;
             }
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
@@ -61,23 +65,23 @@ public class GetUserNumbers extends HttpServlet {
         doPost(request, response);
     }
 
-    public String readFromFile(String filename){
+ /*   public String readFromFile(String filename){
         try{
             return Files.readString(Path.of("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename));
         }catch(IOException e){
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
-    /*public String readFile(String filename) throws IOException {
+    public String readFile(String filename) throws IOException {
         Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
-        path = path.resolve(filename + ".txt");
+        path = path.resolve(filename);
         FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());
         String decrypted = new String(plsread.readAllBytes());
         plsread.close();
         return decrypted;
-    }*/
+    }
 
     //TODO solve decryption error
     public String decryptData(String encrypted, KeyPair pair){
