@@ -11,9 +11,11 @@
     <title>Account</title>
 </head>
 <body>
-<h1>User Account</h1>
+<h1> Welcome to your account, <%=session.getAttribute("first name")%>! </h1>
 
-<!--TODO add labels to the information showed such as First name: firstname etc -->
+<!-- Redirect to log in page all users who tried accessing this public account page without logging in or from an admin account -->
+<% if ((request.getSession() == null) || (!(session.getAttribute("role").equals("public")))) {
+    response.sendRedirect("index.jsp"); }  %>
 
 <h3><%= request.getAttribute("message") %></h3>
 
@@ -22,22 +24,19 @@
 <p><%= "First name: " + session.getAttribute("first name") %></p>
 <p><%= "Last name: " + session.getAttribute("last name") %></p>
 <p><%= "Username: " + session.getAttribute("username") %></p>
+<p><%= "Role: " + session.getAttribute("role") %></p>
 <p><%= "Email: " + session.getAttribute("email") %></p>
 <p><%= "Phone number: " + session.getAttribute("phone number") %></p>
 <p></p>
 <p> ---------------- </p>
 <% String[] arr = (String[]) request.getAttribute("draws");
     if (!(arr == null)){ %>
-        <h3><%="Your draws are:" %></h3>
-       <% for (int i = 0; i < arr.length-1; i++){ %>
+        <h3><%="Your draws:" %></h3>
+       <% for (int i = 0; i < arr.length; i++){ %>
             <p><%= i+1 + ") " + arr[i] %></p>
       <%  }
+      session.setAttribute("draws", arr);
     } %>
-
-<!-- so this form is no longer used or what?
-<form action="UserLogin" method="post">
-    <input type="submit" value="Get Your Data">
-</form> -->
 
 <form action="AddUserNumbers" method="post">
     <label for="usernumber">Your Number:</label>
@@ -49,6 +48,35 @@
 <form action="GetUserNumbers" method="post">
     <input type="submit" value="Get Draws">
 </form>
+
+<form action="CheckForWinners" method="post">
+    <input type="submit" value="Are you a winner?">
+</form>
+
+<% String winner = (String) request.getAttribute("winningdraw");
+String[] draws = (String[]) session.getAttribute("draws");
+    if ((draws != null) && (winner != null)){
+        System.out.println("halo sprawdzam array");
+        Boolean win = false;
+        for (String s : draws) {
+            if (s.equals(winner)) {
+                win = true;
+                System.out.println("mamy to");
+                break;
+            }
+            else{
+                win = false;
+                System.out.println("nie mamy tego");
+            }
+        }
+        if (win){
+            System.out.println("wygrana");%>
+        <h4><%= "You win!!!" %></h4>
+       <% } else {
+           System.out.println("przegrana");%>
+             <h4><%= "This is not your lucky day :(" %></h4>
+      <% }
+} %>
 
 <script>
     //TODO check here what happens when the if statement is deleted
@@ -73,7 +101,7 @@
 </script>
 
 
-<a href="index.jsp">Home Page</a>
+<a href="index.jsp">Log Out</a>
 
 </body>
 </html>
