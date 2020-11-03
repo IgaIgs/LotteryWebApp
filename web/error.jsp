@@ -15,6 +15,6 @@
 
    <p><%= request.getAttribute("message") %></p>
 
-   <a href="index.jsp">Home Page</a>
+   <a href="index.jsp">Log Out</a>
 </body>
 </html>

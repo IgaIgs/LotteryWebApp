@@ -12,9 +12,6 @@
     <filter-mapping>
         <filter-name>RegistrationFilter</filter-name>
         <url-pattern>/*</url-pattern>
-        <!-- <url-pattern>/account.jsp</url-pattern>
-        <url-pattern>/error.jsp</url-pattern>
-        <url-pattern>/index.jsp</url-pattern> -->
     </filter-mapping>
 
 </web-app>

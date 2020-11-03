@@ -40,6 +40,13 @@
       <input type="password" id="newpassword" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}"
              title="Must contain at least one digit, one uppercase and one lowercase letter, and between 8 and 15
              characters." required><br><br> <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}" -->
+      <!-- Drop down menu to choose the role for the account -->
+      <label>Select Account Type:</label><br>
+      <select name="role">
+          <option value="" selected="selected"> - select role - </option>
+          <option value="admin">Admin</option>
+          <option value="public">Public</option>
+      </select>
       <input type="submit" value="Submit">
   </form>
 
@@ -54,6 +61,13 @@
       <input type="password" id="password" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}"
              title="Must contain at least one digit, one uppercase and one lowercase letter, and between 8 and 15
              characters." required><br> <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}" -->
+      <!-- Drop down menu to choose the role for the account -->
+      <label>Select Account Type:</label><br>
+      <select name="role">
+          <option value="" selected="selected"> - select role - </option>
+          <option value="admin">Admin</option>
+          <option value="public">Public</option>
+      </select>
       <input type="submit" value="Submit">
   </form>
 
@@ -63,8 +77,7 @@
           tel = document.getElementById("phone").value;
           mail = document.getElementById("email").value;
           pass = document.getElementById("newpassword").value;
-          var telRe = /^\(?([0-9]{2})\)?[-]?([0-9]{4})[-]?([0-9]{7})$/ // regex for checking phone numbers for
-          // the XX{2}-XXXX{4}-XXXXXXX{7} pattern
+          var telRe = /^\(?([0-9]{2})\)?[-]?([0-9]{4})[-]?([0-9]{7})$/ // regex for checking phone numbers for the XX{2}-XXXX{4}-XXXXXXX{7} pattern
           var passRe = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/ // regex for password validity
           var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ //regex for email validation, pattern: sth@sth.sth, doesn't allow two @
           if (telRe.test(tel)){
@@ -73,19 +86,19 @@
                       return true;
                   }
                   else{
-                      alert("Enter a valid password")
-                      pass = null;
+                      alert("A valid password must contain at least one digit, one uppercase and one lowercase letter, and between 8 and 15 characters.")
+                      pass.innerHTML = null;
                       return false;
                   }
               }
               else {
-                  alert("Enter a valid email");
-                  mail = null;
+                  alert("Enter a valid email of this structure: sometext@webdomain.extention");
+                  mail.innerHTML = null;
                   return false;}
           }
           else{
-              alert("Please enter a valid phone number");
-              tel = null;
+              alert("A valid telehpone number must follow this pattern: 12-1234-1234567");
+              tel.innerHTML = null;
               return false;
           }
       }
@@ -97,8 +110,8 @@
               return true;
           }
           else{
-              alert("Enter a valid password")
-              pass = null;
+              alert("A valid password must contain at least one digit, one uppercase and one lowercase letter, and between 8 and 15 characters.")
+              pass.innerHTML = null;
               return false;
           }
 
