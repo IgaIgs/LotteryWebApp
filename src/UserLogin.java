@@ -64,6 +64,9 @@ public class UserLogin extends HttpServlet {
             plswrite.close();
         }
 
+        //get the log in attempts from the current session
+        Integer loginsSoFar = (Integer) session.getAttribute("loginsLeft");
+
         //remove all pre-existing session attributes
         Enumeration<String> attributes =  session.getAttributeNames();
         while (attributes.hasMoreElements()){
@@ -75,6 +78,9 @@ public class UserLogin extends HttpServlet {
         // get the session again
         session = request.getSession();
 
+        //assign the logins again
+        session.setAttribute("loginsLeft", loginsSoFar);
+        System.out.println("ile mam loginow halo: " + loginsSoFar);
 
         try {
             // create database connection and statement
@@ -111,6 +117,8 @@ public class UserLogin extends HttpServlet {
 
                 if (rscheck.next()) { //if this account is already in the database
 
+                    System.out.println("log in successful");
+
                         // set the user data as attributes of the session
                         session.setAttribute("first name", rscheck.getString("Firstname"));
                         System.out.println(rscheck.getString("Firstname"));
@@ -120,6 +128,9 @@ public class UserLogin extends HttpServlet {
                         session.setAttribute("username", rscheck.getString("Username")); //from the log in form
                         session.setAttribute("role", rscheck.getString("Userrole")); //from the log in form
                         session.setAttribute("hashed password", rscheck.getString("Pwd"));
+
+                        // set the login count for this session as null if another user logs in correctly
+                        session.setAttribute("loginsLeft", null);
 
                     // display account.jsp page with given message if successful and the user is public
                     RequestDispatcher dispatcher;
@@ -136,11 +147,45 @@ public class UserLogin extends HttpServlet {
                     }
                     conn.close();
 
-                } else {
-                    // display error.jsp page with given message if unsuccessful
-                    RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
-                    request.setAttribute("message", "Login unsuccessful!");
-                    dispatcher.forward(request, response);
+                } else {// functionality to limit unsuccessful user logins to 3
+
+                    System.out.println("login unsuccessful so work on the attempts");
+                    int loginsLeft;
+
+                    // find out how many login attempts are left
+                    if (session.getAttribute("loginsLeft") == null){ // if this is the user's FIRST login attempt
+
+                        session.setAttribute("loginsLeft", 3); // create an attempt session attribute with value 3
+                        loginsLeft = 3; //still 3 login chances left
+                        System.out.println("no attempts yet");
+
+                    }
+                    else{ // if this user HAS already attempted logins
+                        loginsLeft = (Integer) session.getAttribute("loginsLeft"); //find out how many attempts they have left
+                        System.out.println("some attempts already");
+                    }
+
+                    // the action happens
+                    if (loginsLeft <= 1){ //if the user has no more attempts
+                        System.out.println("action for zero attempts");
+                        RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
+                        request.setAttribute("logins", 3); // to inform the index.jsp page to disable the form
+                        dispatcher.forward(request, response);
+                    }
+                    else{
+                        System.out.println("action when attempts left");
+                        //if they failed the login but they still have more attempts
+                        loginsLeft --;
+                        // display error.jsp page with given message if unsuccessful
+                        RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
+                        request.setAttribute("message", "Login unsuccessful! You have " + loginsLeft + " attempts left!");
+                        request.setAttribute("message2", "To try again, click <a href=\"index.jsp\">here</a>! :)");
+                        dispatcher.forward(request, response);
+                    }
+
+                    session.setAttribute("loginsLeft", loginsLeft);
+
+                    System.out.println("assigned logins to session");
 
                     // close connection
                     conn.close();

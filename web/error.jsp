@@ -13,8 +13,8 @@
 <body>
    <h1>Error Page</h1>
 
-   <p><%= request.getAttribute("message") %></p>
+   <h3><%= request.getAttribute("message") %></h3>
+   <h4><%= request.getAttribute("message2") %></h4>
 
-   <a href="index.jsp">Log Out</a>
 </body>
 </html>

@@ -63,13 +63,33 @@
              characters." required><br> <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}" -->
       <!-- Drop down menu to choose the role for the account -->
       <label>Select Account Type:</label><br>
-      <select name="role">
+      <select name="role" id="role" required>
           <option value="" selected="selected"> - select role - </option>
           <option value="admin">Admin</option>
           <option value="public">Public</option>
       </select>
-      <input type="submit" value="Submit">
+      <input type="submit" id="submitb" value="Submit">
   </form>
+
+  <!-- if the user hit maximum failed logins - disable the login form -->
+  <% if ((request.getAttribute("logins") != null) && ((Integer) request.getAttribute("logins") == 3)) {%>
+  <script>
+      document.getElementById("username").disabled=true;
+      document.getElementById("password").disabled=true;
+      document.getElementById("role").disabled=true;
+      document.getElementById("submitb").disabled=true;
+
+      alert("Unfortunately, you have exceeded the maximum possible unsuccessful login attempts.");
+
+  </script>
+  <%  } %>
+
+  <script>
+      // reactivate the website after refresh
+      if ( window.history.replaceState ) {
+          window.history.replaceState( null, null, "index.jsp");
+      }
+  </script>
 
 
     <script>
@@ -114,7 +134,6 @@
               pass.innerHTML = null;
               return false;
           }
-
       }
   </script>
 
