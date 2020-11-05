@@ -10,8 +10,10 @@ import java.sql.*;
 
 @WebServlet("/CheckForWinners")
 public class CheckForWinners extends HttpServlet {
+
     private Connection conn;
     private Statement stmt, stmt2;
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
@@ -94,9 +96,16 @@ public class CheckForWinners extends HttpServlet {
             dispatcher.forward(request, response);
         } finally {
             try {
+                if (stmt2 != null)
+                    stmt2.close();
+            } catch (SQLException se3) {
+                se3.printStackTrace();
+            }
+            try {
                 if (stmt != null)
                     stmt.close();
             } catch (SQLException se2) {
+                se2.printStackTrace();
             }
             try {
                 if (conn != null)

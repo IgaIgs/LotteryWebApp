@@ -76,6 +76,7 @@ public class GetUserData extends HttpServlet {
                 if (stmt != null)
                     stmt.close();
             } catch (SQLException se2) {
+                se2.printStackTrace();
             }
             try {
                 if (conn != null)

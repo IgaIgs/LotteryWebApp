@@ -103,9 +103,8 @@ public class AddUserNumbers extends HttpServlet {
         return null;
     }
 
-    public void writeToFile(String filename, String encrypted){
+    private static void writeToFile(String filename, String encrypted){
         try{
-            // add true if append, not overwrite
             FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8, true);
             plswrite.write(encrypted + System.lineSeparator()); //write the encrypted string with a new line after it so it's easier to split them later
             plswrite.close();
@@ -115,7 +114,7 @@ public class AddUserNumbers extends HttpServlet {
         }
     }
 
-    public static String bytesToHex(byte[] bytes) {
+    private static String bytesToHex(byte[] bytes) {
         char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {

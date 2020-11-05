@@ -112,6 +112,7 @@ public class CreateAccount extends HttpServlet {
                     request.setAttribute("message", "You have successfully created a public account");
                     dispatcher.forward(request, response);
                 }
+                //display the admin page if successful and user is admin
                 else if (session.getAttribute("role").equals("admin")){
                     dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
                     request.setAttribute("message", "You have successfully created an admin account");
@@ -141,7 +142,9 @@ public class CreateAccount extends HttpServlet {
                 if(stmt!=null)
                     stmt.close();
             }
-            catch(SQLException se2){}
+            catch(SQLException se2){
+                se2.printStackTrace();
+            }
             try{
                 if(conn!=null)
                     conn.close();
@@ -158,12 +161,13 @@ public class CreateAccount extends HttpServlet {
 
     /**
      * hash the password with advanced hashing algorithm called PBKDF2WithHmacSHA1
+     * has to be public so that the it can be also accessed within the UserLogin.java servlet
      * @param pwd - password to be hashed
      * @return - hashed password
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public String hash_pwd(String pwd, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static String hash_pwd(String pwd, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
         if (pwd == null || pwd.length() == 0){
             throw new IllegalArgumentException("Empty passwords are not supported.");}
 
@@ -183,7 +187,7 @@ public class CreateAccount extends HttpServlet {
      * @return - salt
      * @throws NoSuchAlgorithmException
      */
-    public static byte[] getSalt() throws NoSuchAlgorithmException{
+    private static byte[] getSalt() throws NoSuchAlgorithmException{
         return SecureRandom.getInstance("SHA1PRNG").generateSeed(32);
     }
 

@@ -19,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 
 @WebServlet("/GetUserNumbers")
 public class GetUserNumbers extends HttpServlet {
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try{
@@ -74,7 +75,7 @@ public class GetUserNumbers extends HttpServlet {
         return null;
     }*/
 
-    public String readFile(String filename) throws IOException {
+    private static String readFile(String filename) throws IOException {
         Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
         path = path.resolve(filename);
         FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());
@@ -83,8 +84,7 @@ public class GetUserNumbers extends HttpServlet {
         return decrypted;
     }
 
-    //TODO solve decryption error
-    public String decryptData(String encrypted, KeyPair pair){
+    private static String decryptData(String encrypted, KeyPair pair){
         try {
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
@@ -101,7 +101,7 @@ public class GetUserNumbers extends HttpServlet {
         return null;
     }
 
-    public byte[] hexStringtoByte(String hexs){
+    private static byte[] hexStringtoByte(String hexs){
         int len = hexs.length();
         byte[] b = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
