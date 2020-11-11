@@ -20,12 +20,25 @@ public class AddUserNumbers extends HttpServlet {
         try{
             // get the session from Servlet
             HttpSession session = request.getSession();
+            System.out.println("check 1: " + (session.getAttribute("role") == null));
 
             //get the hashed password
             String pwd = (String) session.getAttribute("hashed password");
 
-            //create a single String from the number submitted by the user
-            String usernumber = request.getParameter("usernumber");
+            //create a single String from the 6 numbers submitted by the user, separated by commas
+            StringBuilder usernumber = new StringBuilder();
+
+            for (int i =1; i <=6; i++){
+                if (i == 1){
+                    usernumber.append(request.getParameter("userno1")); //add the integer from the first text box
+                }
+                else{
+                    // add integers from subsequent text boxes with commas in front of each
+                    usernumber.append(",").append(request.getParameter("userno" + i));
+                }
+            }
+            System.out.println(usernumber);
+
 
             // create the KeyPair for encryption
             KeyPair pair;
@@ -52,7 +65,7 @@ public class AddUserNumbers extends HttpServlet {
             session.setAttribute("keypair", pair);
 
             // get the encrypted string
-            String enString = encryptData(usernumber, pair);
+            String enString = encryptData(usernumber.toString(), pair);
 
             //create file name from first 20 characters of the hashed password
             String filename = pwd.substring(0, 20) + ".txt";
@@ -60,8 +73,11 @@ public class AddUserNumbers extends HttpServlet {
             writeToFile(filename, enString);
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-            request.setAttribute("message", "Press the 'Get Draws' button to display you draws!");
+            request.setAttribute("message", "Draws added successfully!<br>" + "Press the 'Get Draws' button to display you draws!");
             dispatcher.forward(request, response);
+
+            System.out.println("wyslalam info do account");
+            System.out.println("Check 2: " + (session.getAttribute("role") == null));
         }
         catch(Exception se){
             se.printStackTrace();
@@ -105,7 +121,9 @@ public class AddUserNumbers extends HttpServlet {
 
     private static void writeToFile(String filename, String encrypted){
         try{
-            FileWriter plswrite = new FileWriter("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename, StandardCharsets.UTF_8, true);
+            File dir = new File("Created Files");
+            dir.mkdir();
+            FileWriter plswrite = new FileWriter(dir +"\\" + filename, StandardCharsets.UTF_8, true);
             plswrite.write(encrypted + System.lineSeparator()); //write the encrypted string with a new line after it so it's easier to split them later
             plswrite.close();
         }

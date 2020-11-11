@@ -11,8 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -26,37 +26,49 @@ public class GetUserNumbers extends HttpServlet {
             // get the session from Servlet
             HttpSession session = request.getSession();
 
-            //get the hashed password
-            String pwd = (String) session.getAttribute("hashed password");
+                //get the hashed password
+                String pwd = (String) session.getAttribute("hashed password");
 
-            //get file name to be read from
-            String filename = pwd.substring(0, 20) + ".txt";
+                //get file name to be read from
+                String filename = pwd.substring(0, 20) + ".txt";
 
-            //get all the encrypted strings from a file
-            String encrypted = readFile(filename);
+            if (Files.exists(Path.of("./Created Files/" + filename))) {
+                //if the user has already submitted draws but hasn't yet checked for winners so their file exists
 
-            //get the encryption keypair which was saved as an attribute of the session when encrypting
-            KeyPair pair = (KeyPair) session.getAttribute("keypair");
+                //get all the encrypted strings from their file
+                String encrypted = readFile(filename);
+                System.out.println("Encrypted String: " + encrypted);
 
-            // split the strings from the file back to single encrypted strings with 6 integers each
-            // and store them in an array
-            String[] lines = encrypted.split(System.lineSeparator());
+                //get the encryption keypair which was saved as an attribute of the session when encrypting
+                KeyPair pair = (KeyPair) session.getAttribute("keypair");
 
-            //create an array to store decrypted strings
-            String[] decryptedStrings = new String[lines.length];
+                // split the strings from the file back to single encrypted strings with 6 integers each
+                // and store them in an array
+                String[] lines = encrypted.split(System.lineSeparator());
 
-            //for each string inside the array
-            for (int i = 0; i < lines.length; i++) {
-                //decrypt the string
-                String decrypted = decryptData(lines[i], pair);
-                decryptedStrings[i] = decrypted;
+                //create an array to store decrypted strings
+                String[] decryptedStrings = new String[lines.length];
+
+                //for each string inside the lines array
+                for (int i = 0; i < lines.length; i++) {
+                    //decrypt the string
+                    String decrypted = decryptData(lines[i], pair);
+                    // and add it to the decrypted array
+                    decryptedStrings[i] = decrypted;
+                }
+
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
+                request.setAttribute("draws", decryptedStrings);
+                request.setAttribute("message", "To find out whether you won, press the 'Are you a winner?' button!");
+                dispatcher.forward(request, response);
             }
-
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-            request.setAttribute("draws", decryptedStrings);
-            request.setAttribute("message", "Find your draws below your account info:");
-            dispatcher.forward(request, response);
-
+            else{
+                // when the this user's file doesn't exist
+                // (cuz they didn't add any draws yet or they have already checked for winners and it got deleted etc)
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
+                request.setAttribute("message", "No lottery draws found. Please add some first.");
+                dispatcher.forward(request, response);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,21 +78,19 @@ public class GetUserNumbers extends HttpServlet {
         doPost(request, response);
     }
 
- /*   public String readFromFile(String filename){
+    private static String readFile(String filename) throws IOException {
+        /*Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
+        path = path.resolve(filename);
+        FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());*/
+        String decrypted = "";
         try{
-            return Files.readString(Path.of("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\" + filename));
-        }catch(IOException e){
+        FileInputStream plsread = new FileInputStream("./Created Files/" + filename);
+        decrypted = new String(plsread.readAllBytes());
+        plsread.close();
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
-    }*/
-
-    private static String readFile(String filename) throws IOException {
-        Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
-        path = path.resolve(filename);
-        FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());
-        String decrypted = new String(plsread.readAllBytes());
-        plsread.close();
         return decrypted;
     }
 

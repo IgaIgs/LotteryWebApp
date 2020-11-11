@@ -13,8 +13,15 @@
 <body>
    <h1>Error Page</h1>
 
+   <% if (request.getAttribute("message") != null) { %>
    <h3><%= request.getAttribute("message") %></h3>
+   <% } %>
+   <% if (request.getAttribute("message2") != null) { %>
    <h4><%= request.getAttribute("message2") %></h4>
+    <% } %>
+
+
+   <a href="index.jsp">Home Page</a>
 
 </body>
 </html>

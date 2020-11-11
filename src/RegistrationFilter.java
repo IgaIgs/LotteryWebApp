@@ -17,27 +17,16 @@ public class RegistrationFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {
         boolean invalid = false;
-        Map params = request.getParameterMap(); //k(names):v(values) map of input sent from the Sign Up Form
+        Map params = request.getParameterMap(); //k(input names):v(input values) map of input sent from the Sign Up Form
 
-        /*
-        Inside the While Loop, each Key and Value of each parameter (a Key-Value pair) is cast to a String type
-        and assigned to separate variables, key and values respectively. Note, key is used as the parameter in the call
-        to get the parameter Value assigned to values.  Note also that for each Key-Value pair,
-        the Key may map to a Value set hence why values is an array of Strings.
-        An If statement is then used to check each String in the values array to see if it is valid.
-        If not valid, then the boolean invalid is assigned true and the If statement exits using the break keyword.
-        The validity of each String in values is checked by the checkChars method we will define below.
-        The last line here forces the While Loop to exit, again using break, because we only need to find one invalid
-        String for the entire user input to be invalid.
-         */
         if(params != null){
-            for (Object o : params.keySet()) {
-                String key = (String) o;
-                String[] values = (String[]) params.get(key);
+            for (Object o : params.keySet()) { // for each key (input name) from params
+                String key = (String) o; //set its value to a local variable called key
+                String[] values = (String[]) params.get(key); // get values mapped to each of the keys and add them to a String array
 
-                for (String value : values) {
-                    if (checkChars(value)) {
-                        invalid = true;
+                for (String value : values) { //for each value in the array
+                    if (checkChars(value)) { //if the value matched with any bad characters, this will be true
+                        invalid = true; // so the input is invalid
                         break;
                     }
                 }
@@ -47,28 +36,25 @@ public class RegistrationFilter implements Filter {
             }
         }
 
-        if(invalid){
-            try{
+        if(invalid){ // if the input is invalid
+            try{ //take the user to an error page with info on what happened
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
-                request.setAttribute("message", "error");
+                request.setAttribute("message", "Error <br> Invalid characters entered. Please try again!");
                 dispatcher.forward(request, response);
             }
             catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-        else{
+        else{ // if the input was valid, proceed with regular chain of activities
             chain.doFilter(request, response);
         }
 
     }
 
     /**
-     * Essentially, the method defines an array of Strings containing the unwanted Strings or Characters given above,
-     * loops through that array and checks if any of the unwanted Strings are present in the value String parameter.
-     * This is done using the String indexOf() method which returns the position of the first occurrence of specified
-     * character(s) in a string. If a position, or index, is returned by indexOf(), an unwanted String must exist in
-     * value. Subsequently, the boolean invalid is assigned true and returned by the method.
+     * Method checking whether given String parameter matches any of the forbidden characters (Strings), which are
+     * stored in a form of a String array. If it matches, the method returns true, if not, false.
      *
      * @param value - user's input to a text field in a form
      * @return - boolean value saying whether the input is valid or not
@@ -78,9 +64,9 @@ public class RegistrationFilter implements Filter {
         boolean invalid = false;
         String[] badChars = { "<", ">", "!", "{", "}", "insert", "into", "where", "script", "delete", "input" };
 
-        for (String badChar : badChars) {
+        for (String badChar : badChars) { // check every forbidden character against the argument value
             if (value.contains(badChar)) {
-                invalid = true;
+                invalid = true; //if the value matches with any of the bad chars - set invalid to true
                 break;
             }
         }

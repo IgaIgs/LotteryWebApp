@@ -14,4 +14,20 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <filter>
+        <filter-name>LogOutFilter</filter-name>
+        <filter-class>LogOutFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>LogOutFilter</filter-name>
+        <url-pattern>/index.jsp</url-pattern>
+    </filter-mapping>
+
+    <listener>
+        <listener-class>
+            LotteryAppContextListener
+        </listener-class>
+    </listener>
+
 </web-app>

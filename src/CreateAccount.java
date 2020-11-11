@@ -59,9 +59,6 @@ public class CreateAccount extends HttpServlet {
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
 
-            /*PreparedStatement dlt = conn.prepareStatement("TRUNCATE TABLE userAccounts");
-            dlt.execute();*/
-
             //check for the same usernames
             PreparedStatement checkusers = conn.prepareStatement("SELECT Username FROM userAccounts WHERE Username = ?");
             checkusers.setString(1, username);
@@ -74,8 +71,7 @@ public class CreateAccount extends HttpServlet {
                         + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
                 byte[] salt = getSalt(); //get salt
-                System.out.println("nowe salt: " + Arrays.toString(salt));
-                String hashedpwd = hash_pwd(password, salt); //get a hashed password
+                String hashedpwd = hash_pwd(password, salt); //get the hashed password
 
                 // set values into SQL query statement
                 stmt = conn.prepareStatement(query);
@@ -88,7 +84,6 @@ public class CreateAccount extends HttpServlet {
                 stmt.setString(7, hashedpwd);
                 stmt.setBytes(8, salt);
 
-
                 // execute query and close connection
                 stmt.execute();
                 conn.close();
@@ -100,13 +95,13 @@ public class CreateAccount extends HttpServlet {
                 session.setAttribute("email", email);
                 session.setAttribute("phone number", phone);
                 session.setAttribute("username", username);
-                session.setAttribute("role", role);
+                //session.setAttribute("role", role);
                 System.out.println(role);
                 session.setAttribute("hashed password", hashedpwd);
                 session.setAttribute("salt", salt);
 
                 // display account.jsp page with given message if successful and the user is public
-                RequestDispatcher dispatcher;
+                /*RequestDispatcher dispatcher;
                 if (session.getAttribute("role").equals("public")){
                     dispatcher = request.getRequestDispatcher("/account.jsp");
                     request.setAttribute("message", "You have successfully created a public account");
@@ -117,7 +112,10 @@ public class CreateAccount extends HttpServlet {
                     dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
                     request.setAttribute("message", "You have successfully created an admin account");
                     dispatcher.forward(request, response);
-                }
+                }*/
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
+                request.setAttribute("message", "You have successfully created an account! Please log in :)");
+                dispatcher.forward(request, response);
 
             }
             else{
@@ -127,8 +125,6 @@ public class CreateAccount extends HttpServlet {
                 dispatcher.forward(request, response);
             }
 
-
-            // TODO check his error handling and improve yours
 
         } catch(Exception se){
             se.printStackTrace();

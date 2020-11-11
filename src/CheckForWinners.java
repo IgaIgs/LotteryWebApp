@@ -5,7 +5,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.sql.*;
 
 @WebServlet("/CheckForWinners")
@@ -47,16 +54,12 @@ public class CheckForWinners extends HttpServlet {
             if (!(table.next())) { //table doesn't yet exist
                 //so create it
                 String sql = "CREATE TABLE winningDraws (" +
-                        "Winningdraw VARCHAR(50) NOT NULL)";
+                        "Winningdraw VARCHAR(50) NOT NULL," +
+                        "PRIMARY KEY (WinningDraw))";
 
                 stmt2.executeUpdate(sql);
                 System.out.println("Creatd winningdraws table");
             }
-
-            /*//delete the table with winning lotteries if it exists
-            PreparedStatement dlt = conn.prepareStatement("DROP TABLE winningDraws");
-            dlt.execute();
-            System.out.println("deleted the database");*/
 
             //empty the database with the winning draws before adding a new one
             PreparedStatement trnct = conn.prepareStatement("TRUNCATE TABLE winningDraws");
@@ -66,7 +69,7 @@ public class CheckForWinners extends HttpServlet {
             String query = "INSERT INTO winningDraws"
                     + " VALUES (?)";
             PreparedStatement adddraw = conn.prepareStatement(query);
-            adddraw.setString(1, "001122334455");
+            adddraw.setString(1, "00,11,22,33,44,55");
             System.out.println("inserted the winning draw to the table");
             adddraw.execute();
 
@@ -79,10 +82,26 @@ public class CheckForWinners extends HttpServlet {
                 System.out.println("jest winningdraw");
                 // display account.jsp page with te winner draw added to request object and a message with intruction for user
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
-                request.setAttribute("message", "To find out whether you won, press the 'Are you a winner?' button!");
                 request.setAttribute("winningdraw", rs.getString("Winningdraw"));
                 System.out.println("winning draw is: " + rs.getString("Winningdraw"));
                 dispatcher.forward(request, response);
+            }
+
+            //get the session
+            HttpSession session = request.getSession();
+
+            //get the hashed password
+            String pwd = (String) session.getAttribute("hashed password");
+
+            //get this users filename
+            String filename = pwd.substring(0, 20) + ".txt";
+
+            //delete this user's file after he checked for wins
+            try{
+                Files.deleteIfExists(Path.of("./Created Files/" + filename));
+            } catch(IOException e)
+            {
+                e.printStackTrace();
             }
 
             conn.close();
