@@ -1,14 +1,11 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: johnmace
-  Date: 21/10/2020
-  Time: 15:57
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
   <head>
     <title>Home</title>
+      <link rel="stylesheet" href="style.css"/>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
+      <script src="http://jqueryvalidation.org/files/dist/additional-methods.min.js"></script>
   </head>
   <body>
 
@@ -21,57 +18,59 @@
   <!--  create and position title of form1 -->
   <h2 style ='position: absolute; left: 10px; top: 70px; padding: 10px;'> Sign Up </h2>
 
-  <!-- create Sign Up form --> <!--onsubmit="return validateRegister()" -->
-  <form action="CreateAccount" method="post" onsubmit="return validateRegister()" style ='position: absolute; left: 10px; top: 120px; padding: 10px;'>
+  <!-- create Sign Up form -->
+  <form action="CreateAccount" name="register" method="post" style ='position: absolute; left: 10px; top: 120px; padding: 10px;'>
       <!-- first name field -->
       <label for="firstname">First name:</label><br>
-      <input type="text" id="firstname" name="firstname" placeholder="John" required><br>
+      <input type="text" id="firstname" name="firstname" placeholder="John"><br>
       <!-- last name field -->
       <label for="lastname">Last name:</label><br>
-      <input type="text" id="lastname" name="lastname" placeholder="Doe" required><br>
+      <input type="text" id="lastname" name="lastname" placeholder="Doe"><br>
       <!-- username field -->
-      <label for="username">Username:</label><br>
-      <input type="text" id="newusername" name="username" placeholder="JohnDoe938" required><br>
+      <label for="newusername">Username:</label><br>
+      <input type="text" id="newusername" name="username" placeholder="JohnDoe938"><br>
       <!-- phone field -->
       <label for="phone">Phone Number:</label><br>
       <input type="tel" id="phone" name="phone" placeholder="00-0000-0000000"
-             title="Must follow this pattern: 12-1234-1234567" required><br> <!-- pattern="[0-9]{2}-[0-9]{4}-[0-9]{7}" -->
+             title="Must follow this pattern: 12-1234-1234567"
+      ><br>
       <!-- email field -->
       <label for="email">Email:</label><br>
-      <input type="text" id="email" name="email" maxlength='50' placeholder="johndoe@hello.com" required><br>
-      <!-- pass field -->
+      <input type="email" id="email" name="email" title="Must be a valid email of this structure: sometext@webdomain.extention"
+             placeholder="johndoe@hello.com"><br>
+      <!-- pwd field -->
       <label for="password">Password:</label><br>
       <input type="password" id="newpassword" name="password"
              title="Must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15
-             characters." required><br><br> <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}" -->
+             characters." ><br>
       <!-- Drop down menu to choose the role for the account -->
-      <label>Select Account Type:</label><br>
-      <select name="role" required>
+      <label for="role">Select Account Type:</label><br>
+      <select name="role" >
           <option value="" selected="selected"> - select role - </option>
           <option value="admin">Admin</option>
           <option value="public">Public</option>
-      </select>
+      </select><br><br>
       <input type="submit" value="Submit">
   </form>
 
   <!-- create and position title of form 2 -->
   <h2 style ='position: absolute; left: 230px; top: 70px; padding: 10px;'> Log In </h2>
 
-  <!-- create and position form for Logging In for already registered users --> <!-- onsubmit="return validateLogIn()"-->
-  <form action="UserLogin" method="post" onsubmit="return validateLogIn()" style ='position: absolute; left: 230px; top: 120px; padding: 10px;'>
-      <label for="Username">Username:</label><br>
-      <input type="text" id="username" name="username" required><br>
+  <!-- create and position form for Logging In for already registered users -->
+  <form action="UserLogin" name="login" method="post" style ='position: absolute; left: 230px; top: 120px; padding: 10px;'>
+      <label for="username">Username:</label><br>
+      <input type="text" id="username" name="username"><br>
       <label for="Password">Password:</label><br>
       <input type="password" id="password" name="password"
              title="Must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15
-             characters." required><br> <!-- pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}" -->
+             characters."><br>
       <!-- Drop down menu to choose the role for the account -->
-      <label>Select Account Type:</label><br>
-      <select name="role" id="role" required>
+      <label for="role">Select Account Type:</label><br>
+      <select name="role" id="role">
           <option value="" selected="selected"> - select role - </option>
           <option value="admin">Admin</option>
           <option value="public">Public</option>
-      </select>
+      </select><br><br>
       <input type="submit" id="submitb" value="Submit">
   </form>
 
@@ -95,51 +94,73 @@
       }
   </script>
 
+  <script>
+      // script containing validation functionality for both forms, done using JQuery library
+      $(function() {
+          $("form[name='register']").validate({
+              rules: { //defined using the names of the inputs
+                  firstname: "required",
+                  lastname: "required",
+                  username: "required",
+                  phone: {
+                      required: true,
+                      pattern: /^\(?([0-9]{2})\)?[-]?([0-9]{4})[-]?([0-9]{7})$/,
+                  },
+                  email: {
+                      required: true,
+                      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      email: true,
+                      maxlength: "50"
+                  },
+                  password: {
+                      required: true,
+                      pattern: /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/
+                  },
+                  role: "required",
+              },
+              messages: {
+                  firstname: "Please enter your firstname",
+                  lastname: "Please enter your lastname",
+                  username: "Please enter your username",
+                  phone: {
+                      required: "Please provide a phone number",
+                      pattern: "A valid telephone number must follow this pattern: 12-1234-1234567"
+                  },
+                  email: {
+                      required: "Please provide an email address",
+                      email: "Enter a valid email of this structure: sometext@webdomain.extention",
+                      pattern: "Enter a valid email of this structure: sometext@webdomain.extention",
+                      maxlength: "You exceeded the character limit for this field."
+                  },
+                  password: {
+                      required: "Please enter your password",
+                      pattern: "A valid password must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15 characters."
+                  },
+                  role: "Please choose a role"
+              },
+          })
 
-    <script>
-      function validateRegister(){
-          tel = document.getElementById("phone").value;
-          mail = document.getElementById("email").value;
-          pass = document.getElementById("newpassword").value;
-          var telRe = /^\(?([0-9]{2})\)?[-]?([0-9]{4})[-]?([0-9]{7})$/ // regex for checking phone numbers for the XX{2}-XXXX{4}-XXXXXXX{7} pattern
-          var passRe = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/ // regex for password validity
-          var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ //regex for email validation, pattern: sth@sth.sth, doesn't allow two @
-          if (telRe.test(tel)){
-              if (emailRe.test(mail)){
-                  if (passRe.test(pass)){
-                      return true;
-                  }
-                  else{
-                      alert("A valid password must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15 characters.")
-                      document.getElementById("newpassword").value = null;
-                      return false;
-                  }
-              }
-              else {
-                  alert("Enter a valid email of this structure: sometext@webdomain.extention");
-                  //document.getElementById("email").value = null;
-                  return false;}
-          }
-          else{
-              alert("A valid telephone number must follow this pattern: 12-1234-1234567");
-              //document.getElementById("phone").value = null;
-              return false;
-          }
-      }
-
-      function validateLogIn(){
-          pass = document.getElementById("password").value;
-          var passRe = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/ // regex for password validity
-          if (passRe.test(pass)){
-              return true;
-          }
-          else{
-              alert("A valid password must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15 characters.")
-              document.getElementById("password").value = null;
-              return false;
-          }
-      }
+          $("form[name='login']").validate({
+              rules: { //defined using the names of the inputs
+                  username: "required",
+                  password: {
+                      required: true,
+                      pattern: /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,15}$/
+                  },
+                  role: "required",
+              },
+              messages: {
+                  username: "Please enter your username",
+                  password: {
+                      required: "Please enter your password",
+                      pattern: "A valid password must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15 characters."
+                  },
+                  role: "Please choose a role"
+              },
+          })
+      })
   </script>
+
 
   </body>
 </html>
