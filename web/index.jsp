@@ -1,7 +1,9 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
   <head>
     <title>Home</title>
+
+      <!-- Get all the references and libraries -->
       <link rel="stylesheet" href="style.css"/>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
@@ -11,11 +13,12 @@
 
   <h1> Home Page </h1>
 
+  <!-- display the message if it's defined -->
   <% if (request.getAttribute("message") != null) { %>
   <h4><%= request.getAttribute("message") %></h4>
   <% } %>
 
-  <!--  create and position title of form1 -->
+  <!--  create and position title of registration form -->
   <h2 style ='position: absolute; left: 10px; top: 70px; padding: 10px;'> Sign Up </h2>
 
   <!-- create Sign Up form -->
@@ -32,20 +35,19 @@
       <!-- phone field -->
       <label for="phone">Phone Number:</label><br>
       <input type="tel" id="phone" name="phone" placeholder="00-0000-0000000"
-             title="Must follow this pattern: 12-1234-1234567"
-      ><br>
+             title="Must follow this pattern: 12-1234-1234567"><br>
       <!-- email field -->
       <label for="email">Email:</label><br>
       <input type="email" id="email" name="email" title="Must be a valid email of this structure: sometext@webdomain.extention"
              placeholder="johndoe@hello.com"><br>
       <!-- pwd field -->
-      <label for="password">Password:</label><br>
+      <label for="newpassword">Password:</label><br>
       <input type="password" id="newpassword" name="password"
              title="Must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15
              characters." ><br>
       <!-- Drop down menu to choose the role for the account -->
-      <label for="role">Select Account Type:</label><br>
-      <select name="role" >
+      <label for="role" >Select Account Type:</label><br>
+      <select name="role" id="role">
           <option value="" selected="selected"> - select role - </option>
           <option value="admin">Admin</option>
           <option value="public">Public</option>
@@ -53,20 +55,20 @@
       <input type="submit" value="Submit">
   </form>
 
-  <!-- create and position title of form 2 -->
+  <!-- create and position title of log in form -->
   <h2 style ='position: absolute; left: 230px; top: 70px; padding: 10px;'> Log In </h2>
 
-  <!-- create and position form for Logging In for already registered users -->
+  <!-- create and position Log In form for already registered users -->
   <form action="UserLogin" name="login" method="post" style ='position: absolute; left: 230px; top: 120px; padding: 10px;'>
       <label for="username">Username:</label><br>
       <input type="text" id="username" name="username"><br>
-      <label for="Password">Password:</label><br>
+      <label for="password">Password:</label><br>
       <input type="password" id="password" name="password"
              title="Must contain at least one digit, one uppercase, one lowercase letter, and between 8 and 15
              characters."><br>
       <!-- Drop down menu to choose the role for the account -->
-      <label for="role">Select Account Type:</label><br>
-      <select name="role" id="role">
+      <label for="role1">Select Account Type:</label><br>
+      <select name="role" id="role1">
           <option value="" selected="selected"> - select role - </option>
           <option value="admin">Admin</option>
           <option value="public">Public</option>
@@ -74,7 +76,7 @@
       <input type="submit" id="submitb" value="Submit">
   </form>
 
-  <!-- if the user hit maximum failed logins - disable the login form -->
+  <!-- if the user hit maximum failed logins - disable the login form. Will be re-enabled after refresh-->
   <% if ((request.getAttribute("loginsattempted") != null) && ((Integer) request.getAttribute("loginsattempted") == 3)) {%>
   <script>
       document.getElementById("username").disabled=true;
@@ -88,7 +90,7 @@
   <%} %>
 
   <script>
-      // reactivate the website after refresh
+      // reactivate the website after refresh - to re-enable the log in form
       if ( window.history.replaceState ) {
           window.history.replaceState( null, null, "index.jsp");
       }
@@ -97,8 +99,10 @@
   <script>
       // script containing validation functionality for both forms, done using JQuery library
       $(function() {
+
+          // validation for the Sign Up form
           $("form[name='register']").validate({
-              rules: { //defined using the names of the inputs
+              rules: {
                   firstname: "required",
                   lastname: "required",
                   username: "required",
@@ -140,8 +144,9 @@
               },
           })
 
+          // validation for the Log In form
           $("form[name='login']").validate({
-              rules: { //defined using the names of the inputs
+              rules: {
                   username: "required",
                   password: {
                       required: true,
@@ -160,7 +165,6 @@
           })
       })
   </script>
-
 
   </body>
 </html>

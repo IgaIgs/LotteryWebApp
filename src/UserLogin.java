@@ -5,26 +5,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
-
+/**
+ * Servlet used to process the user's login
+ * checks if the username is already in the database and logs them in if the username x pwd x role combination is correct
+ * keeps count of failed login attempts and disables the form after 3 failed attempts
+ * After successful login, takes the admin or public users to their respective pages
+ */
 @WebServlet("/UserLogin")
 public class UserLogin extends HttpServlet {
 
     private Connection conn;
-
-    //get the CreateAccount class to use its hashing methods
-    CreateAccount acc = new CreateAccount();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -52,55 +47,7 @@ public class UserLogin extends HttpServlet {
         // get the current session from Servlet
         HttpSession session = request.getSession();
 
-        /*//if this user has already used the website and files were already created for him
-        if ((session.getAttribute("username") != null) && (session.getAttribute("username").equals(username))) {
-            System.out.println("deleting this user's lottery file if it exists");
-
-            //get the hashed password
-            String pwd = (String) session.getAttribute("hashed password");
-
-            //get this users filename
-            String filename = pwd.substring(0, 20) + ".txt";
-
-            try {
-                Files.deleteIfExists(Path.of("./Created Files/" + filename));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }*/
-
-            /*try{
-                File dir = new File("Created Files");
-                dir.mkdir();
-                // make the file blank so that the next time the user logs in and picks his lottery numbers,
-                // there are no problems with encryption and decryption
-                FileWriter plswrite = new FileWriter(dir +"\\" + filename, StandardCharsets.UTF_8);
-                plswrite.write("");
-                plswrite.close();
-            }
-            catch (IOException e){
-                e.printStackTrace();
-            }
-        }*/
-
-
-        /*//get the log in attempts from the current session
-        Integer loginTries = (Integer) session.getAttribute("loginsLeft");
-        System.out.println("how many login attempts left: " + loginTries);*/
-
-       /* //remove all pre-existing session attributes
-        Enumeration<String> attributes =  session.getAttributeNames();
-        while (attributes.hasMoreElements()){
-            session.removeAttribute(attributes.nextElement());
-        }
-        //invalidate the current session
-        session.invalidate(); */
-
-        /*//assign the logins again
-        session.setAttribute("loginsLeft", loginTries);
-        System.out.println("ile mam loginow halo: " + loginTries);*/
-        System.out.println("ile mam loginow w Userlogin: " + session.getAttribute("loginsLeft"));
-
+        /// crate a login failed boolean indicator
         boolean loginFailed = true;
 
         try {
@@ -111,48 +58,42 @@ public class UserLogin extends HttpServlet {
             //get salts from all users with the same username
             PreparedStatement getsalt = conn.prepareStatement("SELECT Salt FROM userAccounts WHERE Username = ?");
             getsalt.setString(1, username);
-            ResultSet salts = getsalt.executeQuery(); //my salts here
+            ResultSet salts = getsalt.executeQuery();
 
-            //hash the password of the current user (attempting login) with each of the salts from the query above
-            //list to store variations of the hashed password
+            // hash the password of the current user (attempting login) with each of the salts from the query above
+            // store all the hashed password variations in a List
             List<String> hashes = new ArrayList<>();
 
             // for each salt (so in case this username exists in the database)
             while(salts.next()){
                 //add it to the hashed password and store the complete hashed password in the hashes array
-                hashes.add(acc.hash_pwd(password, salts.getBytes("Salt")));
+                hashes.add(CreateAccount.hash_pwd(password, salts.getBytes("Salt")));
             }
-            System.out.println("zhashowalam passwordy");
-
-            System.out.println(hashes.size());
 
             //this will get omitted if the username, thus salts, don't exist in the database yet - go down for failed login handling
+
             // for every variation of the hashed password
             for (String hash : hashes) {
 
-                //prepare a check whether this combination of username and hashed password and role is already in the database
+                //prepare a check whether this combination of username x hashed password x role is already in the database
                 PreparedStatement check = conn.prepareStatement("SELECT * FROM userAccounts WHERE Username = ? AND Pwd = ? AND Userrole = ?");
                 check.setString(1, username);
                 check.setString(2, hash);
                 check.setString(3, role);
                 ResultSet rscheck = check.executeQuery();
-                System.out.println("sprawdzilam czy password jest w bazie");
 
                 if (rscheck.next()) { //if this account is already in the database
 
-                    System.out.println("log in successful");
-
                         // set the user data as attributes of the session
                         session.setAttribute("first name", rscheck.getString("Firstname"));
-                        System.out.println(rscheck.getString("Firstname"));
                         session.setAttribute("last name", rscheck.getString("Lastname"));
                         session.setAttribute("email", rscheck.getString("Email"));
                         session.setAttribute("phone number", rscheck.getString("Phone"));
-                        session.setAttribute("username", rscheck.getString("Username")); //from the log in form
-                        session.setAttribute("role", rscheck.getString("Userrole")); //from the log in form
+                        session.setAttribute("username", rscheck.getString("Username"));
+                        session.setAttribute("role", rscheck.getString("Userrole"));
                         session.setAttribute("hashed password", rscheck.getString("Pwd"));
 
-                        // set the login count for this session as null if another user logs in correctly
+                        // set the login count for this session as null cuz the user logged correctly
                         session.setAttribute("loginsLeft", null);
 
                     // display account.jsp page with given message if successful and the user is public
@@ -168,8 +109,11 @@ public class UserLogin extends HttpServlet {
                         request.setAttribute("message", "Login successful!");
                         dispatcher.forward(request, response);
                     }
+
+                    //close the connection
                     conn.close();
 
+                    //set the failed login indicator to false cuz the login was successful
                     loginFailed = false;
 
 
@@ -185,32 +129,34 @@ public class UserLogin extends HttpServlet {
                 // either the username doesn't exist or the username x password x role combination doesn't exist
                 // and with a limit of 3 failed login attempts
 
-                System.out.println("login unsuccessful so work on the attempts");
                 int loginsLeft;
 
                 // find out how many login attempts are left
-                if (session.getAttribute("loginsLeft") == null){ // if this is the user's FIRST login attempt
 
+                // if this is the user's FIRST login attempt
+                if (session.getAttribute("loginsLeft") == null){
                     session.setAttribute("loginsLeft", 3); // create a loginsleft session attribute with value 3
                     loginsLeft = 3; //still 3 login chances left
-                    System.out.println("no attempts yet");
 
                 }
                 else{ // if this user HAS already attempted logins
-                    loginsLeft = (Integer) session.getAttribute("loginsLeft"); //find out how many attempts they have left
-                    System.out.println("some attempts already");
+
+                    //find out how many attempts they have left
+                    loginsLeft = (Integer) session.getAttribute("loginsLeft");
                 }
 
                 // the action happens
                 if (loginsLeft <= 1){ //if the user has no more attempts
-                    System.out.println("action for zero attempts");
+
                     RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
-                    request.setAttribute("loginsattempted", 3); // to inform the index.jsp page to disable the form
+                    // to inform the index.jsp page to disable the form
+                    request.setAttribute("loginsattempted", 3);
                     dispatcher.forward(request, response);
+
+                    // reset the loginsleft count to 3 so the user can try again after they refresh the page and enable the form again
                     loginsLeft = 3;
                 }
                 else{
-                    System.out.println("action when attempts left");
                     //if they failed the login but they still have more attempts
                     loginsLeft --;
                     // display error.jsp page with given message if unsuccessful
@@ -220,9 +166,8 @@ public class UserLogin extends HttpServlet {
                     dispatcher.forward(request, response);
                 }
 
+                // update the loginsleft tracker
                 session.setAttribute("loginsLeft", loginsLeft);
-
-                System.out.println("assigned logins to session");
 
                 // close connection
                 conn.close();

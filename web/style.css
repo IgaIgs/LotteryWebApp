@@ -1,3 +1,5 @@
+/* This is a small CSS file just to style the error message shown when validating the sign up and log in forms */
+
 label.error {
     color: red;
     display: block;

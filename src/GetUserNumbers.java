@@ -17,6 +17,12 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * This servlet is used to:
+ * get the lottery draw file for the current user
+ * retrieve and decrypt the draws from inside this file
+ * add the decrypted draws to  array and passing it as one of the request attributes to the account page
+ */
 @WebServlet("/GetUserNumbers")
 public class GetUserNumbers extends HttpServlet {
 
@@ -26,20 +32,19 @@ public class GetUserNumbers extends HttpServlet {
             // get the session from Servlet
             HttpSession session = request.getSession();
 
-                //get the hashed password
-                String pwd = (String) session.getAttribute("hashed password");
+            //get the current user's hashed password
+            String pwd = (String) session.getAttribute("hashed password");
 
-                //get file name to be read from
-                String filename = pwd.substring(0, 20) + ".txt";
+            //get file name to be read from
+            String filename = pwd.substring(0, 20) + ".txt";
 
+            //if the user's file exists (already submitted draws but not yet checked for winners)
             if (Files.exists(Path.of("./Created Files/" + filename))) {
-                //if the user has already submitted draws but hasn't yet checked for winners so their file exists
 
                 //get all the encrypted strings from their file
                 String encrypted = readFile(filename);
-                System.out.println("Encrypted String: " + encrypted);
 
-                //get the encryption keypair which was saved as an attribute of the session when encrypting
+                //get the encryption keypair which was saved as an attribute of the session during encryption
                 KeyPair pair = (KeyPair) session.getAttribute("keypair");
 
                 // split the strings from the file back to single encrypted strings with 6 integers each
@@ -57,6 +62,8 @@ public class GetUserNumbers extends HttpServlet {
                     decryptedStrings[i] = decrypted;
                 }
 
+
+                // forward the user to the account page with the decrypted draws saved to request attribute
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
                 request.setAttribute("draws", decryptedStrings);
                 request.setAttribute("message", "To find out whether you won, press the 'Are you a winner?' button!");
@@ -64,13 +71,17 @@ public class GetUserNumbers extends HttpServlet {
             }
             else{
                 // when the this user's file doesn't exist
-                // (cuz they didn't add any draws yet or they have already checked for winners and it got deleted etc)
+                // (cuz they didn't add any draws yet or they have already checked for winners and it got deleted etc.)
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
                 request.setAttribute("message", "No lottery draws found. Please add some first.");
                 dispatcher.forward(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
+            // display error.jsp page with given message if unsuccessful
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
+            request.setAttribute("message", "Something went wrong");
+            dispatcher.forward(request, response);
         }
     }
 
@@ -78,11 +89,15 @@ public class GetUserNumbers extends HttpServlet {
         doPost(request, response);
     }
 
-    private static String readFile(String filename) throws IOException {
-        /*Path path = Paths.get("D:\\Users\\Kirai\\CSC2031 Coursework\\LotteryWebApp\\Created Files\\");
-        path = path.resolve(filename);
-        FileInputStream plsread = new FileInputStream(path.toAbsolutePath().toString());*/
+    /**
+     Method for reading strings from a given file
+     * @param filename - the name of the file to be read from
+     * @return - string read from the file
+     */
+    private static String readFile(String filename){
+        // create an empty String variable
         String decrypted = "";
+        // try to read the file
         try{
         FileInputStream plsread = new FileInputStream("./Created Files/" + filename);
         decrypted = new String(plsread.readAllBytes());
@@ -94,16 +109,25 @@ public class GetUserNumbers extends HttpServlet {
         return decrypted;
     }
 
+    /**
+     * Method for decrypting Strings
+     * @param encrypted - encrypted string to be decrypted
+     * @param pair - encryption keypair used for decryption
+     * @return - decrypted string
+     */
     private static String decryptData(String encrypted, KeyPair pair){
         try {
+            // instantiate the cipher object, set it to decryption mode and give it the key pair
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, pair.getPrivate());
 
             //convert the encrypted string to a byte array to be able to pass it to the cipher
             cipher.update(hexStringtoByte(encrypted));
 
-            byte[] decrbyte = cipher.doFinal(); //decrypt the string
-            return new String(decrbyte); //return decrypted string
+            //decrypt the string
+            byte[] decrbyte = cipher.doFinal();
+            //return decrypted string
+            return new String(decrbyte);
 
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException | NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -111,13 +135,22 @@ public class GetUserNumbers extends HttpServlet {
         return null;
     }
 
+    /**
+     * A method for converting a hex string to a byte array
+     * @param hexs - hex string to be converted
+     * @return - byte array
+     */
     private static byte[] hexStringtoByte(String hexs){
+        // get the length of the hex string
         int len = hexs.length();
+        // create a byte array of half the length (bytes hav half the size of hex chars)
         byte[] b = new byte[len / 2];
+        // for every character from the hex string, convert it to byte and save to the byte array
         for (int i = 0; i < len; i += 2) {
             b[i / 2] = (byte) ((Character.digit(hexs.charAt(i), 16) << 4)
                     + Character.digit(hexs.charAt(i+1), 16));
         }
+        // return the byte array
         return b;
     }
 }

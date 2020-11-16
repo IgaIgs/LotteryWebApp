@@ -14,9 +14,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
-import java.util.Arrays;
 
-
+/**
+ * This servlet is used to:
+ * retrieve the data entered by the user to the registration form
+ * compare it against the data in the database - if this username doesn't yet exist -->
+ * allow the user to create an account and save their data in the database
+ * assign the user's information to session attributes
+ */
 @WebServlet("/CreateAccount")
 public class CreateAccount extends HttpServlet {
 
@@ -42,7 +47,7 @@ public class CreateAccount extends HttpServlet {
         // 3. use this when running tomcat and mysql database servers on your machine
         //String DB_URL = "jdbc:mysql://localhost:3306/lottery";
 
-        // get parameter data that was submitted in HTML form (use form attributes 'name')
+        // get parameter data that was submitted in HTML form
         String firstname = request.getParameter("firstname");
         String lastname = request.getParameter("lastname");
         String email = request.getParameter("email");
@@ -59,19 +64,20 @@ public class CreateAccount extends HttpServlet {
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL,USER,PASS);
 
-            //check for the same usernames
+            //check if the username entered is already in the database
             PreparedStatement checkusers = conn.prepareStatement("SELECT Username FROM userAccounts WHERE Username = ?");
             checkusers.setString(1, username);
             ResultSet rschecked = checkusers.executeQuery();
 
-            if (!(rschecked.next())) { //if this user is NOT yet in the database, allow to create an account
+            //if this user is NOT yet in the database, allow to create an account
+            if (!(rschecked.next())) {
 
-                // Create sql query
+                // Create sql query to insert the user's data to the database
                 String query = "INSERT INTO userAccounts (Firstname, Lastname, Email, Phone, Username, Userrole, Pwd, Salt)"
                         + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-                byte[] salt = getSalt(); //get salt
-                String hashedpwd = hash_pwd(password, salt); //get the hashed password
+                byte[] salt = getSalt(); //generate salt for this user (for password hashing)
+                String hashedpwd = hash_pwd(password, salt); //hash this user's password
 
                 // set values into SQL query statement
                 stmt = conn.prepareStatement(query);
@@ -90,36 +96,21 @@ public class CreateAccount extends HttpServlet {
 
                 // set the user data as attributes of the session
                 session.setAttribute("first name", firstname);
-                System.out.println(firstname);
                 session.setAttribute("last name", lastname);
                 session.setAttribute("email", email);
                 session.setAttribute("phone number", phone);
                 session.setAttribute("username", username);
-                //session.setAttribute("role", role);
-                System.out.println(role);
                 session.setAttribute("hashed password", hashedpwd);
                 session.setAttribute("salt", salt);
 
-                // display account.jsp page with given message if successful and the user is public
-                /*RequestDispatcher dispatcher;
-                if (session.getAttribute("role").equals("public")){
-                    dispatcher = request.getRequestDispatcher("/account.jsp");
-                    request.setAttribute("message", "You have successfully created a public account");
-                    dispatcher.forward(request, response);
-                }
-                //display the admin page if successful and user is admin
-                else if (session.getAttribute("role").equals("admin")){
-                    dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
-                    request.setAttribute("message", "You have successfully created an admin account");
-                    dispatcher.forward(request, response);
-                }*/
+                // stay on index.jsp with instruction to log in
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
                 request.setAttribute("message", "You have successfully created an account! Please log in :)");
                 dispatcher.forward(request, response);
 
             }
             else{
-                // display error.jsp page with given message if unsuccessful
+                // display error.jsp page with correct message for when the username entered by the user is already in the database
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
                 request.setAttribute("message", firstname+", this username already exists. Please try again");
                 dispatcher.forward(request, response);
@@ -128,7 +119,7 @@ public class CreateAccount extends HttpServlet {
 
         } catch(Exception se){
             se.printStackTrace();
-            // display error.jsp page with given message if unsuccessful
+            // display error.jsp page with correct message for when entered username x password combination already exists
             RequestDispatcher dispatcher = request.getRequestDispatcher("/error.jsp");
             request.setAttribute("message", firstname+", this username/password combination already exists. Please try again");
             dispatcher.forward(request, response);
@@ -156,37 +147,45 @@ public class CreateAccount extends HttpServlet {
     }
 
     /**
-     * hash the password with advanced hashing algorithm called PBKDF2WithHmacSHA1
+     * method to hash the password with advanced hashing algorithm called PBKDF2WithHmacSHA1
      * has to be public so that the it can be also accessed within the UserLogin.java servlet
-     * @param pwd - password to be hashed
-     * @return - hashed password
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
+     * @param pwd - password String to be hashed
+     * @return - hashed password String
+     * @throws NoSuchAlgorithmException - in case the requested algo is not available in the environment
+     * @throws InvalidKeySpecException - when the key specification is invalid
      */
     public static String hash_pwd(String pwd, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        // if the password is empty
         if (pwd == null || pwd.length() == 0){
             throw new IllegalArgumentException("Empty passwords are not supported.");}
 
         // instantiate the SecretKeyFactory using the above algo
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        // generate our hash
+
+        // generate the hash with the use of the salt generated in the method below
         SecretKey key = f.generateSecret(new PBEKeySpec(pwd.toCharArray(), salt, 20000, 64*8));
+
         // encode the hash
         byte[] hash = key.getEncoded();
-        //get the pwd
-        System.out.println(hex(hash));
+
+        //return the hashed password in a form of a hex string
         return hex(hash);
     }
 
     /**
-     * create salt to hash the password
-     * @return - salt
-     * @throws NoSuchAlgorithmException
+     * create salt to be used in the password hashing process
+     * @return - salt (byte[])
+     * @throws NoSuchAlgorithmException - in case the requested algo is not available in the environment
      */
     private static byte[] getSalt() throws NoSuchAlgorithmException{
         return SecureRandom.getInstance("SHA1PRNG").generateSeed(32);
     }
 
+    /**
+     * simple hex function to be used on the hashed password
+     * @param b - byte array to be converted to a hex string
+     * @return - hex string
+     */
     public static String hex(byte[] b) {
         return String.format("%040x", new BigInteger(1, b));
     }

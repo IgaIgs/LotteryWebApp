@@ -5,16 +5,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.sql.*;
 
+/**
+ * This servlet is used to:
+ * create a table to store winning draws if this table doesn't exist yet
+ * add the custom winning draw to the table
+ * retrieve the winning draw from the database and passing it to the account.jsp page
+ * finding and deleting the current user's lottery file once they checked for a win
+ */
 @WebServlet("/CheckForWinners")
 public class CheckForWinners extends HttpServlet {
 
@@ -51,17 +53,17 @@ public class CheckForWinners extends HttpServlet {
             // check if "winningDraws" table exists
             ResultSet table = meta.getTables(null, null, "winningDraws", null);
 
-            if (!(table.next())) { //table doesn't yet exist
-                //so create it
+            // if the table doesn't exist yet
+            if (!(table.next())) {
+                // create it
                 String sql = "CREATE TABLE winningDraws (" +
                         "Winningdraw VARCHAR(50) NOT NULL," +
                         "PRIMARY KEY (WinningDraw))";
 
                 stmt2.executeUpdate(sql);
-                System.out.println("Creatd winningdraws table");
             }
 
-            //empty the database with the winning draws before adding a new one
+            //empty the database with the winning draws before adding a new one (for when the table existed before)
             PreparedStatement trnct = conn.prepareStatement("TRUNCATE TABLE winningDraws");
             trnct.execute();
 
@@ -70,20 +72,15 @@ public class CheckForWinners extends HttpServlet {
                     + " VALUES (?)";
             PreparedStatement adddraw = conn.prepareStatement(query);
             adddraw.setString(1, "00,11,22,33,44,55");
-            System.out.println("inserted the winning draw to the table");
             adddraw.execute();
-
-
 
             // query database and get the winning lottery draw
             ResultSet rs = stmt.executeQuery("SELECT Winningdraw FROM winningDraws");
 
             if (rs.next()){
-                System.out.println("jest winningdraw");
-                // display account.jsp page with te winner draw added to request object and a message with intruction for user
+                // display account.jsp page with the winner draw added to request object and a message with instruction for user
                 RequestDispatcher dispatcher = request.getRequestDispatcher("/account.jsp");
                 request.setAttribute("winningdraw", rs.getString("Winningdraw"));
-                System.out.println("winning draw is: " + rs.getString("Winningdraw"));
                 dispatcher.forward(request, response);
             }
 
@@ -93,10 +90,10 @@ public class CheckForWinners extends HttpServlet {
             //get the hashed password
             String pwd = (String) session.getAttribute("hashed password");
 
-            //get this users filename
+            //get this user's filename
             String filename = pwd.substring(0, 20) + ".txt";
 
-            //delete this user's file after he checked for wins
+            //delete this user's file after they checked for wins
             try{
                 Files.deleteIfExists(Path.of("./Created Files/" + filename));
             } catch(IOException e)
@@ -104,6 +101,7 @@ public class CheckForWinners extends HttpServlet {
                 e.printStackTrace();
             }
 
+            // close the connection
             conn.close();
 
 
@@ -135,7 +133,7 @@ public class CheckForWinners extends HttpServlet {
         }
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
 
     }
 }

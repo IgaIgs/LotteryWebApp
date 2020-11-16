@@ -7,6 +7,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.*;
 
+/**
+ * This servlet is used to retrieve all users' data from the database and display it in a form of a table
+ * on the admin page
+ */
 @WebServlet("/GetUserData")
 public class GetUserData extends HttpServlet {
     private Connection conn;
@@ -36,24 +40,24 @@ public class GetUserData extends HttpServlet {
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             stmt = conn.createStatement();
 
-            // query database and get results
+            // query database for all users' data and get resultset
             ResultSet rs = stmt.executeQuery("SELECT Firstname, Lastname, Email, Phone, Username, Userrole FROM userAccounts");
 
             // create HTML table text
-            String content = "<table border='1' tablepadding='2' cellspacing='2' cellpadding='2' width='100%' align='left'>" +
-                    "<tr><th>First name</th><th>Last name</th><th>Email</th><th>Phone number</th><th>Username</th><th>User role</th></tr>";
+            StringBuilder content = new StringBuilder("<table border='1' tablepadding='2' cellspacing='2' cellpadding='2' width='100%' align='left'>" +
+                    "<tr><th>First name</th><th>Last name</th><th>Email</th><th>Phone number</th><th>Username</th><th>User role</th></tr>");
 
             // add HTML table data using data from database
             while (rs.next()) {
-                content += "<tr><td>"+ rs.getString("Firstname") + "</td>" +
-                        "<td>" + rs.getString("Lastname") + "</td>" +
-                        "<td>" + rs.getString("Email") + "</td>" +
-                        "<td>" + rs.getString("Phone") + "</td>" +
-                        "<td>" + rs.getString("Username") + "</td>" +
-                        "<td>" + rs.getString("Userrole") + "</td></tr>";
+                content.append("<tr><td>").append(rs.getString("Firstname")).append("</td>").append("<td>")
+                        .append(rs.getString("Lastname")).append("</td>").append("<td>")
+                        .append(rs.getString("Email")).append("</td>").append("<td>")
+                        .append(rs.getString("Phone")).append("</td>").append("<td>")
+                        .append(rs.getString("Username")).append("</td>").append("<td>")
+                        .append(rs.getString("Userrole")).append("</td></tr>");
             }
             // finish HTML table text
-            content += "</table>";
+            content.append("</table>");
 
             // close connection
             conn.close();
@@ -61,7 +65,7 @@ public class GetUserData extends HttpServlet {
             // display admin_home.jsp page with given content above if successful
             RequestDispatcher dispatcher = request.getRequestDispatcher("/admin/admin_home.jsp");
             request.setAttribute("message", "User data:");
-            request.setAttribute("data", content);
+            request.setAttribute("data", content.toString());
             dispatcher.forward(request, response);
 
 
