@@ -1,5 +1,7 @@
 # LotteryWebApp
 
+![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/home_page.png)
+
 ## Table of contents
 * [Introduction](#introduction)
 * [Idea](#idea)
@@ -35,7 +37,13 @@ This web app allows the users to:
   - by choosing their own numbers or
   - by using the lucky dip functionality
 * Viewing their submitted draws
+
+![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/home_page.png)
+
 * Check for a win
+
+![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/checkforwin.png)
+
 
 ## Security and programming paradigms
 
@@ -46,12 +54,18 @@ In this project I have learnt about and implemented the following:
 * Data transit between Client/Server
 * Error handling
 * Input validation using JavaScript/JQuery
+
+![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/CLI%20validation.png)  ![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/CLI.png)
+
 * Input validation using a filter
 * Hashing and matching with a hashed password
 * Encrypting/decrypting data
 * Secure random number generation
 * Session management
 * Limiting user login attempts
+
+![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/error%20login.png)
+
 * Role based access control
 
 ## Launch
