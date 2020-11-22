@@ -114,7 +114,7 @@
                       required: true,
                       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                       email: true,
-                      maxlength: "50"
+                      maxlength: "254"
                   },
                   password: {
                       required: true,
