@@ -36,7 +36,7 @@ This web app allows the users to:
 * Submit lottery draws:
   - by choosing their own numbers or
   - by using the lucky dip functionality
-* Viewing their submitted draws
+* View their submitted draws
 
 ![](https://github.com/IgaIgs/LotteryWebApp/blob/master/AppCaptures/home_page.png)
 
